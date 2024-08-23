@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
 import PromptCard from "./PromptCard";
+import Image from "next/image";
 
 const PromptCardList = ({ data, handleTagClick }) => {
   return (
@@ -20,6 +20,7 @@ const PromptCardList = ({ data, handleTagClick }) => {
 
 const Feed = () => {
   const [allPosts, setAllPosts] = useState([]);
+  const [loading, setLoading] = useState(true); // New state for loading
 
   // Search states
   const [searchText, setSearchText] = useState("");
@@ -27,10 +28,16 @@ const Feed = () => {
   const [searchedResults, setSearchedResults] = useState([]);
 
   const fetchPosts = async () => {
-    const response = await fetch("/api/prompt");
-    const data = await response.json();
-
-    setAllPosts(data);
+    setLoading(true); // Start loading
+    try {
+      const response = await fetch("/api/prompt");
+      const data = await response.json();
+      setAllPosts(data);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   useEffect(() => {
@@ -80,14 +87,26 @@ const Feed = () => {
         />
       </form>
 
-      {/* All Prompts */}
-      {searchText ? (
-        <PromptCardList
-          data={searchedResults}
-          handleTagClick={handleTagClick}
+      {loading ? (
+        <div className='w-full flex-center mt-16'>
+        <Image
+          src='assets/icons/loader.svg'
+          width={50}
+          height={50}
+          alt='loader'
+          className='object-contain'
         />
+      </div>
       ) : (
-        <PromptCardList data={allPosts} handleTagClick={handleTagClick} />
+        // All Prompts
+        searchText ? (
+          <PromptCardList
+            data={searchedResults}
+            handleTagClick={handleTagClick}
+          />
+        ) : (
+          <PromptCardList data={allPosts} handleTagClick={handleTagClick} />
+        )
       )}
     </section>
   );
